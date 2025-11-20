@@ -1,4 +1,4 @@
-import { InferenceClient } from "@huggingface/inference";
+import { InferenceClient } from "@huggingface/inference"; 
 import {
     InferenceClientError,
     InferenceClientInputError,
@@ -45,7 +45,7 @@ const json_schema = {
 
 export async function POST(req: Request) {
     // can use Groq here
-    const client = new InferenceClient(process.env.HF_TOKEN);
+    const client = new InferenceClient(process.env.HF_TOKEN); // Either a HF access token, or an API key from the third-party provider
 
     const formData = await req.formData();
     const notes = formData.get('notes')?.toString();
