@@ -1,6 +1,8 @@
 'use server';
 
-import { InferenceClient } from "@huggingface/inference"; 
+import { redirect } from 'next/navigation'
+import { revalidatePath } from 'next/cache'
+import { InferenceClient } from "@huggingface/inference";
 import {
     InferenceClientError,
     InferenceClientInputError,
@@ -12,6 +14,8 @@ import { Quiz } from "@/app/lib/quiz";
 
 const model = "Qwen/Qwen3-32B";
 const provider = "auto";
+
+const genericErrorMessage = 'An error occured!';
 
 
 const systemPrompt = `
@@ -45,13 +49,13 @@ const json_schema = {
     "type": "object"
 };
 
-export async function getQuiz(formData: FormData) {
+export async function createQuiz(initialState: any, formData: FormData) {
     // can use Groq here
     const client = new InferenceClient(process.env.HF_TOKEN); // Either a HF access token, or an API key from the third-party provider
 
     const notes = formData.get('notes')?.toString();
 
-    if (notes === undefined) return false;
+    if (notes === undefined) return { errors: 'Notes are blank!' };
 
     try {
         const out = await client.chatCompletion({
@@ -77,11 +81,16 @@ export async function getQuiz(formData: FormData) {
         console.log(out.choices[0].message.content);
         const output = out.choices[0].message.content;
 
-        if (output)
-            return JSON.parse(output);
 
-        return false;
+        if (output) {
+            // id = db.insert(output);
+            // https://nextjs.org/docs/app/guides/redirecting
+            return redirect('/quiz/${id}');
+        }
+
+        return { errors: genericErrorMessage };
     } catch (error) {
+        // https://nextjs.org/docs/app/guides/forms#validation-errors
         if (error instanceof InferenceClientProviderApiError) {
             // Handle API errors (e.g., rate limits, authentication issues)
             console.error("Provider API Error:", error.message);
@@ -103,8 +112,7 @@ export async function getQuiz(formData: FormData) {
                 console.error("Unexpected error:", error);
             }
         }
-        return false;
+        return { errors: genericErrorMessage };
     }
-
 
 }
