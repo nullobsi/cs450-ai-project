@@ -20,7 +20,7 @@ const genericErrorMessage = 'An error occured!';
 
 const systemPrompt = `
 You are a backend assistant. You generate helpful, useful quizzes of an appropriate length to help the user study.
-Your input is the user's class notes. Your output is a Quiz object.
+Your input is the user's class notes. Your output is a Quiz object. You must include 'Quiz' in the title.
 `;
 
 const json_schema = {
@@ -126,8 +126,10 @@ export async function createQuiz(initialState: any, formData: FormData) {
     }
 
     // https://nextjs.org/docs/app/guides/redirecting
-    if (id)
+    if (id) {
+        revalidatePath(`/quiz/${id}`, 'page');
         redirect(`/quiz/${id}`);
+    }
     else
         return { errors: genericErrorMessage };
 }
