@@ -14,7 +14,7 @@ export function QuizForm() {
 	return (
 		<form action={formAction}>
 			<label htmlFor='notes'>Notes</label>
-			<input type='text' id='notes' name='notes' required />
+			<textarea id='notes' name='notes' required rows={5} cols={33} />
 			<p aria-live='polite'>{state?.errors}</p>
 			<button disabled={pending}>Create quiz!</button>
 		</form>

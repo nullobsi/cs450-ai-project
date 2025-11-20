@@ -5,27 +5,27 @@ import sql from "./db";
 
 export interface Quiz {
     title: string,
-    questions: { incorrectOptions: string[], correctOption: string }[]
+    questions: { prompt: string, incorrectOptions: string[], correctOption: string }[]
 };
 
 export async function getQuiz(uuid: string) : Promise<Quiz | undefined> {
 	const quiz = await sql`
 		select
-			quizJson
+			quizData
 		from quiz
-		where id = ${uuid}
+		where id = ${uuid}::uuid
 		limit 1
 	`;
 
 	const res = quiz.at(0);
 	if (res === undefined) return undefined;
 	
-	return res.quizJson;
+	return res.quizdata;
 }
 
 export async function addQuiz(data: Quiz) : Promise<string | undefined> {
 	const quiz = await sql`
-		insert into quiz (quizJson)
+		insert into quiz (quizData)
 		values (${JSON.stringify(data)}::jsonb)
 		returning id
 	`;

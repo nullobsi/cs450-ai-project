@@ -10,9 +10,9 @@ import {
     InferenceClientProviderOutputError,
     InferenceClientHubApiError,
 } from "@huggingface/inference";
-import { Quiz } from "@/app/lib/quiz";
+import { addQuiz, Quiz } from "@/app/lib/quiz";
 
-const model = "Qwen/Qwen3-32B";
+const model = "moonshotai/Kimi-K2-Instruct-0905";
 const provider = "auto";
 
 const genericErrorMessage = 'An error occured!';
@@ -28,10 +28,16 @@ const json_schema = {
         "questions": {
             "items": {
                 "properties": {
+                    "prompt": {
+                        "description": "Multiple choice question prompt.",
+                        "type": "string"
+                    },
                     "correctOption": {
+                        "description": "The only correct answer for the multiple choice question..",
                         "type": "string"
                     },
                     "incorrectOptions": {
+                        "description": "List of incorrect answers for the multiple choice question.",
                         "items": {
                             "type": "string"
                         },
@@ -54,6 +60,7 @@ export async function createQuiz(initialState: any, formData: FormData) {
     const client = new InferenceClient(process.env.HF_TOKEN); // Either a HF access token, or an API key from the third-party provider
 
     const notes = formData.get('notes')?.toString();
+    let id: string | undefined = undefined;
 
     if (notes === undefined) return { errors: 'Notes are blank!' };
 
@@ -83,12 +90,13 @@ export async function createQuiz(initialState: any, formData: FormData) {
 
 
         if (output) {
-            // id = db.insert(output);
-            // https://nextjs.org/docs/app/guides/redirecting
-            return redirect('/quiz/${id}');
+            const quiz = JSON.parse(output) as Quiz;
+            id = await addQuiz(quiz);
+        }
+        else {
+            return { errors: genericErrorMessage };
         }
 
-        return { errors: genericErrorMessage };
     } catch (error) {
         // https://nextjs.org/docs/app/guides/forms#validation-errors
         if (error instanceof InferenceClientProviderApiError) {
@@ -111,8 +119,15 @@ export async function createQuiz(initialState: any, formData: FormData) {
                 // Handle unexpected errors
                 console.error("Unexpected error:", error);
             }
+        } else {
+            console.error("Unexpected error:", error);
         }
         return { errors: genericErrorMessage };
     }
 
+    // https://nextjs.org/docs/app/guides/redirecting
+    if (id)
+        redirect(`/quiz/${id}`);
+    else
+        return { errors: genericErrorMessage };
 }
