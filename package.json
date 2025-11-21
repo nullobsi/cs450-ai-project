@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@ai-sdk/deepinfra": "^1.0.28",
+    "@ai-sdk/huggingface": "^0.0.10",
     "@huggingface/inference": "^4.13.3",
     "@napi-rs/canvas": "^0.1.82",
     "ai": "^5.0.98",
@@ -19,7 +20,8 @@
     "postgres": "^3.4.7",
     "react": "19.2.0",
     "react-dom": "19.2.0",
-    "unpdf": "^1.4.0"
+    "unpdf": "^1.4.0",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

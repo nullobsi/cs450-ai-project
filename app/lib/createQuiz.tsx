@@ -2,139 +2,108 @@
 
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
-import { InferenceClient } from "@huggingface/inference";
-import {
-    InferenceClientError,
-    InferenceClientInputError,
-    InferenceClientProviderApiError,
-    InferenceClientProviderOutputError,
-    InferenceClientHubApiError,
-} from "@huggingface/inference";
-import { addQuiz, Quiz } from "@/app/lib/quiz";
-import { pdfToText } from './pdf';
+import * as z from "zod";
+import { createHuggingFace } from '@ai-sdk/huggingface';
+import { generateObject } from 'ai';
+import { addQuiz } from "@/app/lib/quiz";
+import { pdfToText } from '@/app/lib/pdf';
 
+/************
+ * TUNABLES *
+ ************/
+
+// The model and provider must support structured output.
 const model = "moonshotai/Kimi-K2-Instruct-0905";
-const provider = "auto";
+const maxOutputTokens = 8192;
+const temperature = 0.1;
 
 const genericErrorMessage = 'An error occured!';
-
 
 const systemPrompt = `
 You are a backend assistant. You generate helpful, useful quizzes of an appropriate length to help the user study.
 Your input is the user's class notes. Your output is a Quiz object. You must include 'Quiz' in the title.
 `;
 
-const json_schema = {
-    "properties": {
-        "questions": {
-            "items": {
-                "properties": {
-                    "prompt": {
-                        "description": "Multiple choice question prompt.",
-                        "type": "string"
-                    },
-                    "correctOption": {
-                        "description": "The only correct answer for the multiple choice question..",
-                        "type": "string"
-                    },
-                    "incorrectOptions": {
-                        "description": "List of incorrect answers for the multiple choice question.",
-                        "items": {
-                            "type": "string"
-                        },
-                        "type": "array",
-                        "minItems": 3,
-                        "maxItems": 4,
-                    }
-                },
-                "type": "object",
-                "required": ["prompt", "correctOption", "incorrectOptions"]
-            },
-            "type": "array",
-            "minItems": 1,
-            "maxItems": 20,
-        },
-        "title": {
-            "type": "string"
-        }
-    },
-    "type": "object",
-    "required": ["questions", "title"]
-};
+const QuizSchema = z.object({
+    title: z.string().min(1),
+    questions: z.array(z.object({
+        prompt: z.string().min(1).register(z.globalRegistry, {
+            description: "Multiple choice question prompt.",
+        }),
+        correctOption: z.string().min(1).register(z.globalRegistry, {
+            description: "The only correct answer for the multiple choice question.",
+        }),
+        incorrectOptions: z.array(z.string()).min(1).register(z.globalRegistry, {
+            description: "List of incorrect answers for the multiple choice question.",
+        }),
+    })).min(1).max(20),
+}).register(z.globalRegistry, {
+    description: "An object that represents a quiz for student studying.",
+});
 
+// Use HuggingFace token.
+const huggingFace = createHuggingFace({
+    apiKey: process.env.HF_TOKEN!,
+});
+
+/**
+ * Server action.
+ * @brief Generates a Quiz object and stores it in the database.
+ * Redirects to the quiz if successful.
+ * @param formData Form data from submission. Can have text 'notes' or
+ * multiple files under 'files[]', which should be in PDF or PNG
+ * format.
+ * @returns New state containing an error if quiz could not be
+ * generated.
+ */
 export async function createQuiz(initialState: any, formData: FormData) {
-    // can use Groq here
-    const client = new InferenceClient(process.env.HF_TOKEN); // Either a HF access token, or an API key from the third-party provider
-
+    // Notes can be blank if just files are uploaded.
     let notes = formData.get('notes')?.toString() || '';
 
+    // Get files
     const files = formData.getAll('files[]');
-    const pdfText = await Promise.all(files.filter(f => f instanceof Blob).map(f => pdfToText(f)));
+
+    // TODO: Handle PNG images directly into olmOCR.
+    // TODO: Resize images to the size that olmOCR expects.
+    // Asynchronously convert all PDFs to Markdown.
+    const pdfText = await Promise.all(
+        // files => filter to just Blobs => filter only PDFs => convert to Markdown
+        files.filter(f => f instanceof Blob).filter(f => f.type == 'application/pdf').map(pdfToText)
+    );
+    // Add generated text to notes.
     notes += pdfText.flat().join('\n');
 
-    console.log(notes);
-
-    let id: string | undefined = undefined;
-
+    // Error out early.
     if (notes === undefined || notes == '') return { errors: 'Notes are blank!' };
 
+    // XXX
+    console.log(notes);
+
+    // Final result variable.
+    let id: string | undefined = undefined;
+
     try {
-        const out = await client.chatCompletion({
-            model,
-            provider,
-            messages: [
-                { role: "system", content: systemPrompt },
-                { role: "user", content: notes },
-            ],
-            max_tokens: 8192,
-            temperature: 0.1,
-            response_format: {
-                json_schema: {
-                    description: 'An object representing a quiz for studying.',
-                    name: 'Quiz',
-                    schema: json_schema,
-                    strict: true,
-                },
-                type: 'json_schema',
-            }
+        // Call out to LLM to generate quiz.
+        const res = await generateObject({
+            model: huggingFace(model),
+            maxOutputTokens,
+            temperature,
+            schema: QuizSchema,
+            system: systemPrompt,
+            prompt: notes,
+            schemaName: "Quiz",
+            schemaDescription: "An object that represents a quiz for student studying.",
         });
 
-        const output = out.choices[0].message.content;
-
-
-        if (output) {
-            const quiz = JSON.parse(output) as Quiz;
-            id = await addQuiz(quiz);
+        if (res) {
+            id = await addQuiz(res.object);
         }
         else {
             return { errors: genericErrorMessage };
         }
 
     } catch (error) {
-        // https://nextjs.org/docs/app/guides/forms#validation-errors
-        if (error instanceof InferenceClientProviderApiError) {
-            // Handle API errors (e.g., rate limits, authentication issues)
-            console.error("Provider API Error:", error.message);
-            console.error("HTTP Request details:", error.httpRequest);
-            console.error("HTTP Response details:", error.httpResponse);
-            if (error instanceof InferenceClientHubApiError) {
-                // Handle API errors (e.g., rate limits, authentication issues)
-                console.error("Hub API Error:", error.message);
-                console.error("HTTP Request details:", error.httpRequest);
-                console.error("HTTP Response details:", error.httpResponse);
-            } else if (error instanceof InferenceClientProviderOutputError) {
-                // Handle malformed responses from providers
-                console.error("Provider Output Error:", error.message);
-            } else if (error instanceof InferenceClientInputError) {
-                // Handle invalid input parameters
-                console.error("Input Error:", error.message);
-            } else {
-                // Handle unexpected errors
-                console.error("Unexpected error:", error);
-            }
-        } else {
-            console.error("Unexpected error:", error);
-        }
+        console.error("Unexpected error:", error);
         return { errors: genericErrorMessage };
     }
 
