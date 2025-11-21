@@ -42,18 +42,24 @@ const json_schema = {
                         "items": {
                             "type": "string"
                         },
-                        "type": "array"
+                        "type": "array",
+                        "minItems": 3,
+                        "maxItems": 4,
                     }
                 },
-                "type": "object"
+                "type": "object",
+                "required": ["prompt", "correctOption", "incorrectOptions"]
             },
-            "type": "array"
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 20,
         },
         "title": {
             "type": "string"
         }
     },
-    "type": "object"
+    "type": "object",
+    "required": ["questions", "title"]
 };
 
 export async function createQuiz(initialState: any, formData: FormData) {
@@ -66,7 +72,7 @@ export async function createQuiz(initialState: any, formData: FormData) {
     const pdfText = await Promise.all(files.filter(f => f instanceof Blob).map(f => pdfToText(f)));
     notes += pdfText.flat().join('\n');
 
-	console.log(notes);
+    console.log(notes);
 
     let id: string | undefined = undefined;
 
