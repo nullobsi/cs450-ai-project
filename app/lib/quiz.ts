@@ -20,7 +20,7 @@ export async function getQuiz(uuid: string) : Promise<Quiz | undefined> {
 	const res = quiz.at(0);
 	if (res === undefined) return undefined;
 	
-	return res.quizdata;
+	return JSON.parse(res.quizdata);
 }
 
 export async function addQuiz(data: Quiz) : Promise<string | undefined> {
