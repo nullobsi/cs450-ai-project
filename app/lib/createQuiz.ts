@@ -2,9 +2,9 @@
 
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
-import * as z from "zod";
 import { createHuggingFace } from '@ai-sdk/huggingface';
 import { generateObject } from 'ai';
+import { Quiz } from '@/app/lib/quizSchema';
 import { addQuiz } from "@/app/lib/quiz";
 import { pdfToText } from '@/app/lib/pdf';
 
@@ -24,22 +24,6 @@ You are a backend assistant. You generate helpful, useful quizzes of an appropri
 Your input is the user's class notes. Your output is a Quiz object. You must include 'Quiz' in the title.
 `;
 
-const QuizSchema = z.object({
-    title: z.string().min(1),
-    questions: z.array(z.object({
-        prompt: z.string().min(1).register(z.globalRegistry, {
-            description: "Multiple choice question prompt.",
-        }),
-        correctOption: z.string().min(1).register(z.globalRegistry, {
-            description: "The only correct answer for the multiple choice question.",
-        }),
-        incorrectOptions: z.array(z.string()).min(1).register(z.globalRegistry, {
-            description: "List of incorrect answers for the multiple choice question.",
-        }),
-    })).min(1).max(20),
-}).register(z.globalRegistry, {
-    description: "An object that represents a quiz for student studying.",
-});
 
 // Use HuggingFace token.
 const huggingFace = createHuggingFace({
@@ -88,7 +72,7 @@ export async function createQuiz(initialState: any, formData: FormData) {
             model: huggingFace(model),
             maxOutputTokens,
             temperature,
-            schema: QuizSchema,
+            schema: Quiz,
             system: systemPrompt,
             prompt: notes,
             schemaName: "Quiz",

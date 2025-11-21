@@ -1,18 +1,17 @@
 'use server';
+
 import { createDeepInfra } from "@ai-sdk/deepinfra";
 import { generateText } from "ai";
 
+/************
+ * TUNABLES *
+ ************/
 
-import { chatCompletion } from '@huggingface/inference';
-import {
-    InferenceClientError,
-    InferenceClientInputError,
-    InferenceClientProviderApiError,
-    InferenceClientProviderOutputError,
-    InferenceClientHubApiError,
-} from "@huggingface/inference";
-
+// This is a new model that is very good at documents.
 const model = 'allenai/olmOCR-2-7B-1025';
+const maxOutputTokens = 8000;
+const temperature = 0.1; // Generally should be low for OCR.
+
 const systemPrompt = `
 Attached is one page of a document that you must process.
 Just return the plain text representation of this document as if you were reading it naturally. Convert equations to LateX and tables to HTML.
@@ -29,50 +28,29 @@ async function blobToBase64(blob: Blob) {
 
 const deepinfra = createDeepInfra({ apiKey: process.env.DEEPINFRA_TOKEN! });
 
-export async function olmOCR(image: Blob): Promise<string | undefined> {
+/**
+ * @brief Converts an image of a document into Markdown text.
+ * @param image Should be a PNG encoded image with the largest dimension
+ * being 1288px.
+ * @returns The text.
+ * @throws
+ */
+export async function olmOCR(image: Blob): Promise<string> {
     const dataUrl = await blobToBase64(image);
 
-    try {
-        const res = await generateText({
-            model: deepinfra('allenai/olmOCR-2-7B-1025'),
-            messages: [
-                {
-                    role: "user", content: [
-                        { type: 'text', text: systemPrompt },
-                        { type: 'image', image: dataUrl }
-                    ]
-                }
-            ],
-            maxOutputTokens: 8000,
-            temperature: 0.1,
-        });
-
-        return res.text;
-    } catch (error) {
-        if (error instanceof InferenceClientProviderApiError) {
-            // Handle API errors (e.g., rate limits, authentication issues)
-            console.error("Provider API Error:", error.message);
-            console.error("HTTP Request details:", error.httpRequest);
-            console.error("HTTP Response details:", error.httpResponse);
-            if (error instanceof InferenceClientHubApiError) {
-                // Handle API errors (e.g., rate limits, authentication issues)
-                console.error("Hub API Error:", error.message);
-                console.error("HTTP Request details:", error.httpRequest);
-                console.error("HTTP Response details:", error.httpResponse);
-            } else if (error instanceof InferenceClientProviderOutputError) {
-                // Handle malformed responses from providers
-                console.error("Provider Output Error:", error.message);
-            } else if (error instanceof InferenceClientInputError) {
-                // Handle invalid input parameters
-                console.error("Input Error:", error.message);
-            } else {
-                // Handle unexpected errors
-                console.error("Unexpected error:", error);
+    const res = await generateText({
+        model: deepinfra(model),
+        messages: [
+            {
+                role: "user", content: [
+                    { type: 'text', text: systemPrompt },
+                    { type: 'image', image: dataUrl }
+                ]
             }
-        } else {
-            console.error("Unexpected error:", error);
-        }
+        ],
+        maxOutputTokens,
+        temperature,
+    });
 
-        return undefined;
-    }
+    return res.text;
 }

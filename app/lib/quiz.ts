@@ -1,38 +1,39 @@
 'use server';
 
-import { JSONValue } from "postgres";
-import sql from "./db";
+import sql from "@/app/lib/db";
+import { Quiz } from "@/app/lib/quizSchema"
 
-export interface Quiz {
-    title: string,
-    questions: { prompt: string, incorrectOptions: string[], correctOption: string }[]
-};
+/**
+ * @brief Fetches a quiz from the database.
+ */
+export async function getQuiz(uuid: string): Promise<Quiz | undefined> {
+    const quiz = await sql`
+        select
+           quizData
+        from quiz
+        where id = ${uuid}::uuid
+        limit 1
+    `;
 
-export async function getQuiz(uuid: string) : Promise<Quiz | undefined> {
-	const quiz = await sql`
-		select
-			quizData
-		from quiz
-		where id = ${uuid}::uuid
-		limit 1
-	`;
+    const res = quiz.at(0);
+    if (res === undefined) return undefined;
 
-	const res = quiz.at(0);
-	if (res === undefined) return undefined;
-	
-	return JSON.parse(res.quizdata);
+    return JSON.parse(res.quizdata);
 }
 
-export async function addQuiz(data: Quiz) : Promise<string | undefined> {
-	const quiz = await sql`
-		insert into quiz (quizData)
-		values (${JSON.stringify(data)}::jsonb)
-		returning id
-	`;
+/**
+ * @brief Adds quiz to the database.
+ */
+export async function addQuiz(data: Quiz): Promise<string | undefined> {
+    const quiz = await sql`
+        insert into quiz (quizData)
+        values (${JSON.stringify(data)}::jsonb)
+        returning id
+    `;
 
-	const res = quiz.at(0);
+    const res = quiz.at(0);
 
-	if (res === undefined) return undefined;
+    if (res === undefined) return undefined;
 
-	return res.id as string;
+    return res.id as string;
 }

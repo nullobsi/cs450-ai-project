@@ -1,4 +1,3 @@
-
 export function arrayShuffle<T>(array: Array<T>): Array<T> {
     if (!Array.isArray(array)) {
         throw new TypeError(`Expected an array, got ${typeof array}`);

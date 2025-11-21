@@ -1,5 +1,5 @@
 'use client';
-import { arrayToShuffled } from "../lib/util";
+import { arrayToShuffled } from "@/app/lib/util";
 import { useState } from 'react';
 
 interface QuizQuestionParams {

@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { QuizForm } from "./ui/QuizForm";
+import { QuizForm } from "@/app/ui/QuizForm";
 
 export default function Home() {
   return (
