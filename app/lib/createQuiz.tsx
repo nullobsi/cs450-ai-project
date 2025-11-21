@@ -11,6 +11,7 @@ import {
     InferenceClientHubApiError,
 } from "@huggingface/inference";
 import { addQuiz, Quiz } from "@/app/lib/quiz";
+import { pdfToText } from './pdf';
 
 const model = "moonshotai/Kimi-K2-Instruct-0905";
 const provider = "auto";
@@ -59,10 +60,17 @@ export async function createQuiz(initialState: any, formData: FormData) {
     // can use Groq here
     const client = new InferenceClient(process.env.HF_TOKEN); // Either a HF access token, or an API key from the third-party provider
 
-    const notes = formData.get('notes')?.toString();
+    let notes = formData.get('notes')?.toString() || '';
+
+    const files = formData.getAll('files[]');
+    const pdfText = await Promise.all(files.filter(f => f instanceof Blob).map(f => pdfToText(f)));
+    notes += pdfText.flat().join('\n');
+
+	console.log(notes);
+
     let id: string | undefined = undefined;
 
-    if (notes === undefined) return { errors: 'Notes are blank!' };
+    if (notes === undefined || notes == '') return { errors: 'Notes are blank!' };
 
     try {
         const out = await client.chatCompletion({
@@ -70,9 +78,9 @@ export async function createQuiz(initialState: any, formData: FormData) {
             provider,
             messages: [
                 { role: "system", content: systemPrompt },
-                { role: "user", content: formData.get('notes')?.toString() },
+                { role: "user", content: notes },
             ],
-            max_tokens: 512,
+            max_tokens: 8192,
             temperature: 0.1,
             response_format: {
                 json_schema: {
@@ -85,7 +93,6 @@ export async function createQuiz(initialState: any, formData: FormData) {
             }
         });
 
-        console.log(out.choices[0].message.content);
         const output = out.choices[0].message.content;
 
 
