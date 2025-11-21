@@ -9,11 +9,17 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@ai-sdk/deepinfra": "^1.0.28",
     "@huggingface/inference": "^4.13.3",
+    "@napi-rs/canvas": "^0.1.82",
+    "ai": "^5.0.98",
     "next": "16.0.3",
+    "p-limit": "^7.2.0",
+    "pdfjs-dist": "^5.4.394",
     "postgres": "^3.4.7",
     "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "react-dom": "19.2.0",
+    "unpdf": "^1.4.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -22,6 +28,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.0.3",
+    "raw-loader": "^4.0.2",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

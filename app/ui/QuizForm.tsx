@@ -14,7 +14,8 @@ export function QuizForm() {
 	return (
 		<form action={formAction}>
 			<label htmlFor='notes'>Notes</label>
-			<textarea id='notes' name='notes' required rows={5} cols={33} />
+			<textarea id='notes' name='notes' rows={5} cols={33} />
+			<input type='file' multiple name='files[]' />
 			<p aria-live='polite'>{state?.errors}</p>
 			<button disabled={pending}>Create quiz!</button>
 		</form>
