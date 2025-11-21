@@ -1,5 +1,5 @@
-import { Quiz } from '@/app/lib/quiz';
-import QuizQuestion from './QuizQuestion';
+import { Quiz } from '@/app/lib/quizSchema';
+import QuizQuestion from '@/app/ui/QuizQuestion';
 
 
 function arrayShuffle<T>(array: Array<T>): Array<T> {
