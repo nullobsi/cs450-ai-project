@@ -9,8 +9,8 @@ export async function extractTextFromDocument(file: File): Promise<{
     const fileName = file.name.toLowerCase();
     
     try {
-        // Handle TXT files
-        if (fileName.endsWith('.txt')) {
+        // Handle TXT and MD files
+        if (fileName.endsWith('.txt') || fileName.endsWith('.md')) {
             const text = await file.text();
             return { text };
         }
