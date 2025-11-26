@@ -11,7 +11,7 @@ import {
     InferenceClientHubApiError,
 } from "@huggingface/inference";
 import { addQuiz, Quiz } from "@/app/lib/quiz";
-import { pdfToText } from './pdf';
+import { extractTextFromDocument } from './document';
 
 const model = "moonshotai/Kimi-K2-Instruct-0905";
 const provider = "auto";
@@ -62,11 +62,36 @@ export async function createQuiz(initialState: any, formData: FormData) {
 
     let notes = formData.get('notes')?.toString() || '';
 
-    const files = formData.getAll('files[]');
-    const pdfText = await Promise.all(files.filter(f => f instanceof Blob).map(f => pdfToText(f)));
-    notes += pdfText.flat().join('\n');
+    // Get all uploaded files (check both 'files[]' and 'files')
+    let files = formData.getAll('files[]') as File[];
+    if (files.length === 0) {
+        files = formData.getAll('files') as File[];
+    }
 
-	console.log(notes);
+    console.log(`Processing ${files.length} file(s)...`);
+
+    // Process each file with proper type detection
+    if (files.length > 0) {
+        for (const file of files) {
+            if (file instanceof File && file.size > 0) {
+                console.log(`Processing: ${file.name}`);
+                
+                const result = await extractTextFromDocument(file);
+                
+                if (result.error) {
+                    console.error(`Error: ${result.error}`);
+                    return { errors: result.error };
+                }
+                
+                if (result.text) {
+                    notes += `\n\n${result.text}`;
+                    console.log(`Extracted ${result.text.length} characters`);
+                }
+            }
+        }
+    }
+
+	console.log(`Total notes length: ${notes.length} characters`);
 
     let id: string | undefined = undefined;
 
@@ -75,7 +100,6 @@ export async function createQuiz(initialState: any, formData: FormData) {
     try {
         const out = await client.chatCompletion({
             model,
-            provider,
             messages: [
                 { role: "system", content: systemPrompt },
                 { role: "user", content: notes },
