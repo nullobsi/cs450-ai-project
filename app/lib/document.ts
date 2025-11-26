@@ -9,6 +9,12 @@ export async function extractTextFromDocument(file: File): Promise<{
     const fileName = file.name.toLowerCase();
     
     try {
+        // Handle TXT files
+        if (fileName.endsWith('.txt')) {
+            const text = await file.text();
+            return { text };
+        }
+        
         // Handle PDF files
         if (fileName.endsWith('.pdf')) {
             const pdfResults = await pdfToText(file);
@@ -22,7 +28,7 @@ export async function extractTextFromDocument(file: File): Promise<{
         }
         
         // Unsupported file type
-        return { error: `Unsupported file type. Please use PDF or DOCX files.` };
+        return { error: `Unsupported file type. Please use PDF, DOCX, or TXT files.` };
         
     } catch (error) {
         console.error('Error processing file:', error);
