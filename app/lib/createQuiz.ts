@@ -6,7 +6,7 @@ import { createHuggingFace } from '@ai-sdk/huggingface';
 import { generateObject } from 'ai';
 import { Quiz } from '@/app/lib/quizSchema';
 import { addQuiz } from "@/app/lib/quiz";
-import { pdfToText } from '@/app/lib/pdf';
+import { extractTextFromDocument } from './document';
 
 /************
  * TUNABLES *
@@ -47,21 +47,31 @@ export async function createQuiz(initialState: any, formData: FormData) {
     // Get files
     const files = formData.getAll('files[]');
 
+    // XXX
+    console.log(`Processing ${files.length} file(s)...`);
+
     // TODO: Handle PNG images directly into olmOCR.
     // TODO: Resize images to the size that olmOCR expects.
-    // Asynchronously convert all PDFs to Markdown.
-    const pdfText = await Promise.all(
-        // files => filter to just Blobs => filter only PDFs => convert to Markdown
-        files.filter(f => f instanceof Blob).filter(f => f.type == 'application/pdf').map(pdfToText)
+    // Asynchronously convert all files to text.
+    const documentResults = await Promise.all(
+        files.filter(f => f instanceof File).map(extractTextFromDocument)
     );
-    // Add generated text to notes.
-    notes += pdfText.flat().join('\n');
+
+    for (const result of documentResults) {
+        if (result.error) {
+            console.error(`Error: ${result.error}`);
+            return { errors: result.error };
+        } else if (result.text) {
+            console.log(`Extracted ${result.text.length} characters`);
+            notes += '\n\n' + result.text;
+        }
+    }
 
     // Error out early.
     if (notes === undefined || notes == '') return { errors: 'Notes are blank!' };
 
     // XXX
-    console.log(notes);
+    console.log(`Total notes length: ${notes.length} characters`);
 
     // Final result variable.
     let id: string | undefined = undefined;
