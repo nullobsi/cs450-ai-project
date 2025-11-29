@@ -37,3 +37,23 @@ export async function addQuiz(data: Quiz): Promise<string | undefined> {
 
     return res.id as string;
 }
+
+export async function getAllQuizzes(): Promise<{ id: string; title: string; questionCount: number; firstQuestion: string }[]> {
+    const quizzes = await sql`
+        select 
+            id, 
+            quizData
+        from quiz
+        order by id desc
+    `;
+    
+    return quizzes.map(q => {
+        const data = typeof q.quizdata === 'string' ? JSON.parse(q.quizdata) : q.quizdata;
+        return {
+            id: q.id, 
+            title: data?.title || 'Untitled Quiz',
+            questionCount: data?.questions?.length || 0,
+            firstQuestion: data?.questions?.[0]?.prompt || 'No preview available'
+        };
+    });
+}

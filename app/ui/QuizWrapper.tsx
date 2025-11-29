@@ -28,12 +28,16 @@ export function QuizWrapper({ questions }: { questions: any[] }) {
                 </Button>
             </div>
             <div className="space-y-6" key={key}>
-                {questions.map(q => 
-                    <QuizQuestion 
-                        {...q} 
-                        onAnswer={(correct: boolean) => setAnswers(prev => ({ ...prev, [q.key]: correct }))}
-                    />
-                )}
+                {questions.map(q => {
+                    const { key: questionKey, ...questionProps } = q;
+                    return (
+                        <QuizQuestion 
+                            key={questionKey}
+                            {...questionProps} 
+                            onAnswer={(correct: boolean) => setAnswers(prev => ({ ...prev, [questionKey]: correct }))}
+                        />
+                    );
+                })}
             </div>
         </>
     );
