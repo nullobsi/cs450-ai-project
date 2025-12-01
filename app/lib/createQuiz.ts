@@ -47,14 +47,19 @@ export async function createQuiz(initialState: any, formData: FormData) {
     // Get files
     const files = formData.getAll('files[]');
 
+    // Filter out empty file inputs (files with no name or size)
+    const validFiles = files.filter(
+        f => f instanceof File && f.size > 0 && f.name !== ''
+    ) as File[];
+
     // XXX
-    console.log(`Processing ${files.length} file(s)...`);
+    console.log(`Processing ${validFiles.length} file(s)...`);
 
     // TODO: Handle PNG images directly into olmOCR.
     // TODO: Resize images to the size that olmOCR expects.
     // Asynchronously convert all files to text.
     const documentResults = await Promise.all(
-        files.filter(f => f instanceof File).map(extractTextFromDocument)
+        validFiles.map(extractTextFromDocument)
     );
 
     for (const result of documentResults) {

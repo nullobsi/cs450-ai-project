@@ -1,5 +1,5 @@
 import { Quiz } from '@/app/lib/quizSchema';
-import QuizQuestion from '@/app/ui/QuizQuestion';
+import { QuizWrapper } from './QuizWrapper';
 
 
 function arrayShuffle<T>(array: Array<T>): Array<T> {
@@ -35,18 +35,15 @@ export default async function QuizComponent({ quiz }: { quiz: Quiz }) {
             prompt: q.prompt,
 			key: `q${i}`,
 			correctAnswer: q.correctOption,
-			incorrectAnswer: q.incorrectOptions,
+			incorrectAnswers: q.incorrectOptions,
+            permutation: arrayToShuffled([...Array(1+q.incorrectOptions.length).keys()])
         })))
     };
 
     return (
         <div>
             <h1 className='mb-4 text-4xl font-bold tracking-tight text-heading md:text-5xl lg:text-6xl'>{shuffled_quiz.title}</h1>
-            <div id='questions'>
-                {shuffled_quiz.questions.map(q => 
-					<QuizQuestion prompt={q.prompt} correctAnswer={q.correctAnswer} incorrectAnswers={q.incorrectAnswer} key={q.key} permutation={arrayToShuffled([...Array(1+q.incorrectAnswer.length).keys()])} />
-                )}
-            </div>
+            <QuizWrapper questions={shuffled_quiz.questions} />
         </div>
     );
 }
