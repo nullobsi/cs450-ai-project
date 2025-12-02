@@ -11,6 +11,7 @@ interface QuizQuestionParams {
     correctAnswer: string,
     incorrectAnswers: string[],
     permutation: number[],
+    reasoning?: string,
     onAnswer?: (correct: boolean) => void,
 };
 
@@ -18,7 +19,7 @@ async function questionClick(correct: boolean) {
     console.log(correct);
 }
 
-export default function QuizQuestion({ prompt, correctAnswer, incorrectAnswers, permutation, onAnswer }: QuizQuestionParams) {
+export default function QuizQuestion({ prompt, correctAnswer, incorrectAnswers, permutation, reasoning, onAnswer }: QuizQuestionParams) {
     const [state, setState] = useState({
         selected: 'none',
     });
@@ -37,6 +38,8 @@ export default function QuizQuestion({ prompt, correctAnswer, incorrectAnswers, 
             onAnswer?.(correct);
         }
     };
+
+    const answered = state.selected !== 'none';
 
     return (
         <Card className="p-6 space-y-4">
@@ -69,6 +72,14 @@ export default function QuizQuestion({ prompt, correctAnswer, incorrectAnswers, 
                     )
                 })}
             </div>
+            {answered && reasoning && (
+                <div className="p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-md">
+                    <p className="text-sm text-blue-900 dark:text-blue-100">
+                        <strong className="font-semibold">Explanation: </strong>
+                        {reasoning}
+                    </p>
+                </div>
+            )}
         </Card>
     );
 }

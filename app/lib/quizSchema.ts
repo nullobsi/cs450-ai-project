@@ -13,7 +13,7 @@ export const Quiz = z.object({
         incorrectOptions: z.array(z.string()).min(1).register(z.globalRegistry, {
             description: "List of incorrect answers for the multiple choice question.",
         }),
-        correctOptionReasoning: z.string().min(1).register(z.globalRegistry, {
+        correctOptionReasoning: z.string().min(1).optional().register(z.globalRegistry, {
             description: "A short explanation why the answer is correct, and why the other answers are incorrect.",
         }),
     })).min(1).max(20),

@@ -36,6 +36,7 @@ export default async function QuizComponent({ quiz }: { quiz: Quiz }) {
             key: `q${i}`,
             correctAnswer: q.correctOption,
             incorrectAnswers: q.incorrectOptions,
+            reasoning: q.correctOptionReasoning,
             permutation: arrayToShuffled([...Array(1 + q.incorrectOptions.length).keys()])
         })))
     };
