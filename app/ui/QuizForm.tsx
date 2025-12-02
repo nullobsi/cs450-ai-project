@@ -55,7 +55,7 @@ export function QuizForm() {
                                 className="cursor-pointer"
                             />
                             <p className="text-xs text-muted-foreground">
-                                Supported formats: PDF, DOCX, DOC, TXT, MD, PNG, JPG, AVIF, WEBP
+                                Supported formats: PDF, DOCX, DOC, TXT, MD, PNG, JPG, AVIF, WEBP. Max 100 MB.
                             </p>
                         </div>
                         

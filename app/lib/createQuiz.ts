@@ -21,8 +21,8 @@ const temperature = 0.8;
 const genericErrorMessage = 'An error occured!';
 
 const systemPrompt = `
-You are a backend assistant. You generate helpful, useful quizzes of an appropriate length to help the user study.
-Your input is the user's class notes. Your output is a Quiz object. You must include 'Quiz' in the title.
+You are a backend assistant. You generate helpful, useful quizzes of an appropriate length (1 to 20 questions) to help the user study.
+Your input is the user's class notes. Your output is a Quiz object. You must include 'Quiz' in the title. Do not hallucinate.
 `;
 
 
