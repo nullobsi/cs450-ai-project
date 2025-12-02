@@ -2,10 +2,13 @@
 
 import { createDeepInfra } from "@ai-sdk/deepinfra";
 import { generateText } from "ai";
+import pLimit from 'p-limit';
 
 /************
  * TUNABLES *
  ************/
+// 20 concurrent requests to the endpoint max.
+const parallelRequests = 20;
 
 // This is a new model that is very good at documents.
 const model = 'allenai/olmOCR-2-7B-1025';
@@ -28,6 +31,8 @@ async function blobToBase64(blob: Blob) {
 
 const deepinfra = createDeepInfra({ apiKey: process.env.DEEPINFRA_TOKEN! });
 
+const limit = pLimit(parallelRequests);
+
 /**
  * @brief Converts an image of a document into Markdown text.
  * @param image Should be a PNG encoded image with the largest dimension
@@ -38,7 +43,7 @@ const deepinfra = createDeepInfra({ apiKey: process.env.DEEPINFRA_TOKEN! });
 export async function olmOCR(image: Blob): Promise<string> {
     const dataUrl = await blobToBase64(image);
 
-    const res = await generateText({
+    const res = await limit(generateText, {
         model: deepinfra(model),
         messages: [
             {

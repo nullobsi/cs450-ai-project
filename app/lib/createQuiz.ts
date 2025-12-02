@@ -15,7 +15,7 @@ import { extractTextFromDocument } from './document';
 // The model and provider must support structured output.
 const model = "moonshotai/Kimi-K2-Instruct-0905";
 const maxOutputTokens = 8192;
-const temperature = 0.1;
+const temperature = 0.8;
 
 const genericErrorMessage = 'An error occured!';
 
