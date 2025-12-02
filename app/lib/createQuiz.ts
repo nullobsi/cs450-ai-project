@@ -7,6 +7,7 @@ import { generateObject } from 'ai';
 import { Quiz } from '@/app/lib/quizSchema';
 import { addQuiz } from "@/app/lib/quiz";
 import { extractTextFromDocument } from './document';
+import { addNote } from './note';
 
 /************
  * TUNABLES *
@@ -95,7 +96,10 @@ export async function createQuiz(initialState: any, formData: FormData) {
         });
 
         if (res) {
-            id = await addQuiz(res.object);
+            const noteId = await addNote(notes);
+            if (!noteId) return { errors: genericErrorMessage };
+
+            id = await addQuiz(res.object, noteId);
         }
         else {
             return { errors: genericErrorMessage };

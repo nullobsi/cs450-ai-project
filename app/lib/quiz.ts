@@ -9,48 +9,51 @@ import { Quiz } from "@/app/lib/quizSchema"
 export async function getQuiz(uuid: string): Promise<Quiz | undefined> {
     const quiz = await sql`
         select
-           quizData
+           quiz_data
         from quiz
-        where id = ${uuid}::uuid
+        where quiz_id = ${uuid}::uuid
         limit 1
     `;
 
     const res = quiz.at(0);
     if (res === undefined) return undefined;
 
-    return JSON.parse(res.quizdata);
+    return JSON.parse(res.quiz_data);
 }
 
 /**
  * @brief Adds quiz to the database.
  */
-export async function addQuiz(data: Quiz): Promise<string | undefined> {
+export async function addQuiz(data: Quiz, note_uuid: string): Promise<string | undefined> {
     const quiz = await sql`
-        insert into quiz (quizData)
-        values (${JSON.stringify(data)}::jsonb)
-        returning id
+        insert into quiz (quiz_data, note_id)
+        values (
+            ${JSON.stringify(data)}::jsonb,
+            ${note_uuid}::uuid
+        )
+        returning quiz_id
     `;
 
     const res = quiz.at(0);
 
     if (res === undefined) return undefined;
 
-    return res.id as string;
+    return res.quiz_id as string;
 }
 
 export async function getAllQuizzes(): Promise<{ id: string; title: string; questionCount: number; firstQuestion: string }[]> {
     const quizzes = await sql`
         select 
-            id, 
-            quizData
+            quiz_id,
+            quiz_data
         from quiz
-        order by id desc
+        order by quiz_id desc
     `;
     
     return quizzes.map(q => {
-        const data = typeof q.quizdata === 'string' ? JSON.parse(q.quizdata) : q.quizdata;
+        const data = typeof q.quiz_data === 'string' ? JSON.parse(q.quiz_data) : q.quiz_data;
         return {
-            id: q.id, 
+            id: q.quiz_id, 
             title: data?.title || 'Untitled Quiz',
             questionCount: data?.questions?.length || 0,
             firstQuestion: data?.questions?.[0]?.prompt || 'No preview available'
