@@ -50,12 +50,12 @@ export function QuizForm() {
                                 type="file"
                                 id="files" 
                                 name="files[]" 
-                                accept=".pdf,.docx,.doc,.txt,.md" 
+                                accept=".pdf,.docx,.doc,.txt,.md,.png,.jpg,.jpeg,.avif,.webp" 
                                 multiple 
                                 className="cursor-pointer"
                             />
                             <p className="text-xs text-muted-foreground">
-                                Supported formats: PDF, DOCX, DOC, TXT, MD
+                                Supported formats: PDF, DOCX, DOC, TXT, MD, PNG, JPG, AVIF, WEBP
                             </p>
                         </div>
                         

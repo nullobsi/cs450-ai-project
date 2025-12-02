@@ -28,15 +28,15 @@ function arrayToShuffled<T>(array: Array<T>): Array<T> {
 }
 
 export default async function QuizComponent({ quiz }: { quiz: Quiz }) {
-	console.log(quiz);
+    console.log(quiz);
     const shuffled_quiz = {
         title: quiz.title,
         questions: arrayToShuffled(quiz.questions.map((q, i) => ({
             prompt: q.prompt,
-			key: `q${i}`,
-			correctAnswer: q.correctOption,
-			incorrectAnswers: q.incorrectOptions,
-            permutation: arrayToShuffled([...Array(1+q.incorrectOptions.length).keys()])
+            key: `q${i}`,
+            correctAnswer: q.correctOption,
+            incorrectAnswers: q.incorrectOptions,
+            permutation: arrayToShuffled([...Array(1 + q.incorrectOptions.length).keys()])
         })))
     };
 

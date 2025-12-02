@@ -7,6 +7,7 @@ import { generateObject } from 'ai';
 import { Quiz } from '@/app/lib/quizSchema';
 import { addQuiz } from "@/app/lib/quiz";
 import { extractTextFromDocument } from './document';
+import { addNote } from './note';
 
 /************
  * TUNABLES *
@@ -15,7 +16,7 @@ import { extractTextFromDocument } from './document';
 // The model and provider must support structured output.
 const model = "moonshotai/Kimi-K2-Instruct-0905";
 const maxOutputTokens = 8192;
-const temperature = 0.1;
+const temperature = 0.8;
 
 const genericErrorMessage = 'An error occured!';
 
@@ -95,7 +96,10 @@ export async function createQuiz(initialState: any, formData: FormData) {
         });
 
         if (res) {
-            id = await addQuiz(res.object);
+            const noteId = await addNote(notes);
+            if (!noteId) return { errors: genericErrorMessage };
+
+            id = await addQuiz(res.object, noteId);
         }
         else {
             return { errors: genericErrorMessage };

@@ -63,7 +63,7 @@ export default function QuizQuestion({ prompt, correctAnswer, incorrectAnswers, 
                                 {!showResult && <Circle className="h-5 w-5 flex-shrink-0" />}
                                 {showResult && isCorrect && <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-green-600 dark:text-green-400" />}
                                 {showResult && !isCorrect && <XCircle className="h-5 w-5 flex-shrink-0 text-red-600 dark:text-red-400" />}
-                                <span className="flex-1">{o.body}</span>
+                                <span className="flex-1 text-wrap">{o.body}</span>
                             </span>
                         </Button>
                     )

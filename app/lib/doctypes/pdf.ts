@@ -4,13 +4,7 @@ import { definePDFJSModule, getDocumentProxy } from 'unpdf';
 import { PDFDocumentProxy } from 'unpdf/pdfjs';
 import NodeCanvas from '@napi-rs/canvas';
 import { olmOCR } from '@/app/lib/olmocr';
-import pLimit from 'p-limit';
 
-/************
- * TUNABLES *
- ************/
-// 20 concurrent requests to the endpoint max.
-const parallelRequests = 20;
 
 // This is needed for PDFjs which uses some globals.
 if (typeof globalThis.DOMMatrix === 'undefined')
@@ -63,7 +57,6 @@ export async function pageToImage(proxy: PDFDocumentProxy, page: number): Promis
     return await canvas.convertToBlob();
 }
 
-const limit = pLimit(parallelRequests);
 
 /**
  * @brief Converts a PDF file to text.
@@ -80,8 +73,8 @@ export async function pdfToText(pdfFile: Blob): Promise<string[]> {
         Array(pdf.numPages).keys().map(n => n + 1)
             // convert page to image
             .map(n => pageToImage(pdf, n))
-            // convert image to text with olmOCR, limit parallelism
-            .map(p => p.then(b => limit(olmOCR, b)))
+            // convert image to text with olmOCR
+            .map(p => p.then(b => olmOCR(b)))
     );
 
     return res;
