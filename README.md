@@ -14,3 +14,9 @@ The Quiz object is a simple description of a multiple-choice exam. This
 object is static once generated, and is used with React/NextJS to
 provide simple interactivity and feedback like an actual quiz.
 
+## APIs
+- Neon Postgres (or other postgresql instance): set `DATABASE_URL`.
+- HuggingFace Inference API (Kimi K2): set `HF_TOKEN`.
+- DeepInfra API (olmOCR 2): set `DEEPINFRA_TOKEN`.
+See `.env.example`.
+
